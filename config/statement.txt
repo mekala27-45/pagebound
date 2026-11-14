@@ -1,0 +1,6 @@
+Portfolio document understanding experiment on selected public technical
+pages and labeled synthetic fixtures. A valid location is not proof that
+an answer is correct. Live OCR, recorded model inference and human review
+are labeled separately. Results apply only to the declared pages, models,
+renderings and budget. Not engineering certification or current standards
+advice.

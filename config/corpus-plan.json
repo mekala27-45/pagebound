@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "status": "planned",
+  "seed": 2801,
+  "dpi": 144,
+  "source_byte_limit": 52428800,
+  "sources": [
+    {"id":"nist-2008","url":"https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication811e2008.pdf","expected_pages":90,"notice":"https://www.nist.gov/copyrights-disclaimers"},
+    {"id":"nasa-2016","url":"https://www.nasa.gov/wp-content/uploads/2018/09/nasa_systems_engineering_handbook_0.pdf","expected_pages":297,"notice":"https://www.nasa.gov/nasa-brand-center/images-and-media/"}
+  ],
+  "planned_packets": 12,
+  "planned_pages": 24,
+  "planned_renderings": 48,
+  "planned_questions": 96,
+  "synthetic_development": ["S1","S3","S5"],
+  "synthetic_heldout": ["S2","S4","S6"],
+  "scan": {"rotation_degrees":[-1.5,1.5],"blur_radius":0.4,"jpeg_quality":75,"padding":true},
+  "selection": "First three eligible disjoint anchor and context page pairs per publication; rights and question contract reviewed before freeze."
+}
