@@ -52,6 +52,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python scripts/validate.py
+      - run: python scripts/check_probes.py
       - name: Render current evidence without upgrading incomplete requirements
         run: python scripts/render_claims.py
       - name: Retain validation, including failures
