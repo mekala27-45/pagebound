@@ -11,6 +11,8 @@
 
 ## CPU image operator compatibility
 
+The second runner probe (43554771730) completed OCR and learned layout/table conversion after the CPU wheel fix. SmolVLM initialization then explicitly required num2words. Add its current PyPI version, 0.5.14, to the worker requirements and rerun actual inference. Retain both earlier failed runs; none is a completed VLM trial.
+
 The first real runner probe (43554406019) completed OCR but failed layout and VLM initialization with `RuntimeError: operator torchvision::nms does not exist`. Its retained environment contains torch 2.15.0+cpu and torchvision 0.29.2 from the general package index. Pin the documented torch 2.14.1 and torchvision 0.29.1 CPU pair from the PyTorch CPU index, constrain subsequent worker resolution, and execute a real NMS operator before model probes. The compatibility change follows observed initialization failures. It does not replace model inference with fixtures or change a registered study; no study is frozen yet. Source: https://pytorch.org/get-started/previous-versions/ (checked 2026-11-14).
 
 Add isolated Postgres integration checks for independent-process readback, immutable receipt replay, concurrent reservations, stage reuse, budget/expiry refusal, and exact assisted-review binding. These run only against a new CI database named pagebound_ci on localhost. They do not exercise the live connected database or claim real model execution.

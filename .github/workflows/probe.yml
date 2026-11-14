@@ -4,6 +4,11 @@ on:
     paths:
       - requests/probes/**
       - requirements-cpu-constraints.txt
+      - requirements-worker.in
+      - requirements-api.in
+      - scripts/probe_environment.py
+      - src/pagebound/multimodal/**
+      - src/pagebound/extraction/**
   workflow_dispatch:
 permissions:
   contents: read
