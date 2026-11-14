@@ -1,0 +1,52 @@
+name: Model and environment probes
+on:
+  push:
+    paths:
+      - requests/probes/**
+      - requirements-cpu-constraints.txt
+      - requirements-worker.in
+      - requirements-api.in
+      - scripts/probe_environment.py
+      - src/pagebound/multimodal/**
+      - src/pagebound/extraction/**
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HF_HOME: ${{ github.workspace }}/work/huggingface
+      OMP_NUM_THREADS: '2'
+      MKL_NUM_THREADS: '2'
+      PYTHONPATH: src
+      HF_HUB_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Install CPU worker dependencies
+        run: |
+          mkdir -p artifacts/probes locks
+          python -m pip install torch==2.14.1 torchvision==0.29.1 --index-url https://download.pytorch.org/whl/cpu --report artifacts/probes/torch-install.json
+          python -m pip install -c requirements-cpu-constraints.txt -r requirements-worker.in --report artifacts/probes/worker-install.json
+          python -m pip freeze > locks/worker.lock
+          python -c "import torch,torchvision; from torchvision.ops import nms; assert torch.version.cuda is None; assert len(nms(torch.tensor([[0.,0.,1.,1.]]),torch.tensor([1.]),0.5)) == 1; print(torch.__version__,torchvision.__version__)"
+      - name: Contract tests
+        run: python -m unittest discover -s tests/unit -v
+      - name: Actual OCR layout table and VLM probes
+        run: python scripts/probe_environment.py
+      - name: Retain all probe evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pagebound-probe-${{ github.sha }}
+          path: |
+            artifacts/probes/
+            locks/
+          if-no-files-found: error
+          retention-days: 90

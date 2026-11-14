@@ -1,0 +1,7 @@
+{
+  "observed_at": "2026-11-08T01:08:04Z",
+  "neon": {"project_id":"green-bar-14931726","organization_id":"org-red-hill-57715386","plan":"free","region":"aws-us-east-2","max_cu":0.25,"connection_probe":"not_run"},
+  "vercel": {"team_id":"team_NNcxgB3J9dHQnUJYJJYvRMda","project_id":null,"deployment":"not_deployed","plan":"unverified"},
+  "local": {"python":"3.12.13","node":"24.19.0","logical_processors":24,"network":"DNS lookup to pypi.org failed in restricted executor","model_probe":"not_run"},
+  "github": {"repository":null,"runner_probe":"not_run"}
+}

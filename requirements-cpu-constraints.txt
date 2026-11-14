@@ -1,0 +1,4 @@
+# Matched CPU wheels from https://pytorch.org/get-started/previous-versions/
+# Install from https://download.pytorch.org/whl/cpu before the worker requirements.
+torch==2.14.1+cpu
+torchvision==0.29.1+cpu

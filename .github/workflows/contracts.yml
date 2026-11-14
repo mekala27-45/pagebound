@@ -1,0 +1,101 @@
+name: Source and contract validation
+on:
+  push:
+    branches: [main, codex/pagebound-recovery]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  persistence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: pagebound_ci
+          POSTGRES_USER: pagebound
+          POSTGRES_PASSWORD: pagebound_ci_only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U pagebound -d pagebound_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PAGEBOUND_TEST_DATABASE_URL: postgresql://pagebound:pagebound_ci_only@localhost:5432/pagebound_ci
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'psycopg[binary]==3.3.8' 'langgraph==1.2.20' 'langgraph-checkpoint-postgres==3.2.0'
+      - name: Exercise persistence, replay, races, budgets and exact review binding
+        run: |
+          mkdir -p artifacts/validation
+          set -o pipefail
+          python -m unittest discover -s tests/integration -v 2>&1 | tee artifacts/validation/persistence.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: pagebound-persistence-${{ github.sha }}
+          path: artifacts/validation/persistence.log
+          if-no-files-found: error
+          retention-days: 90
+  contracts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - run: python scripts/validate.py
+      - run: python scripts/check_probes.py
+      - name: Render current evidence without upgrading incomplete requirements
+        run: python scripts/render_claims.py
+      - name: Retain validation, including failures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pagebound-contracts-${{ github.sha }}
+          path: |
+            artifacts/validation/
+            artifacts/public-small/summary.json
+            RESULTS.md
+          if-no-files-found: error
+          retention-days: 90
+  synthetic-preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - name: Install rendering dependencies
+        run: python -m pip install reportlab==5.1.0 pypdfium2==5.15.0 pdfplumber==0.11.10 pillow==13.0.0
+      - name: Rebuild authored fixtures and native extraction
+        run: |
+          python evaluator/generate_fixtures.py
+          python scripts/render_synthetic.py
+          python scripts/extract_native_synthetic.py
+          python scripts/render_claims.py
+          node site/build.mjs
+      - name: Retain synthetic preview and public extraction receipts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pagebound-synthetic-preview-${{ github.sha }}
+          path: |
+            site/dist/
+            artifacts/public-small/
+            artifacts/manifests/synthetic-packets.json
+          if-no-files-found: error
+          retention-days: 90
