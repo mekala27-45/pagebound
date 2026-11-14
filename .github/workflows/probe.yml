@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - requests/probes/**
+      - requirements-cpu-constraints.txt
   workflow_dispatch:
 permissions:
   contents: read
@@ -26,9 +27,10 @@ jobs:
       - name: Install CPU worker dependencies
         run: |
           mkdir -p artifacts/probes locks
-          python -m pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu --report artifacts/probes/torch-install.json
-          python -m pip install -r requirements-worker.in --report artifacts/probes/worker-install.json
+          python -m pip install torch==2.14.1 torchvision==0.29.1 --index-url https://download.pytorch.org/whl/cpu --report artifacts/probes/torch-install.json
+          python -m pip install -c requirements-cpu-constraints.txt -r requirements-worker.in --report artifacts/probes/worker-install.json
           python -m pip freeze > locks/worker.lock
+          python -c "import torch,torchvision; from torchvision.ops import nms; assert torch.version.cuda is None; assert len(nms(torch.tensor([[0.,0.,1.,1.]]),torch.tensor([1.]),0.5)) == 1; print(torch.__version__,torchvision.__version__)"
       - name: Contract tests
         run: python -m unittest discover -s tests/unit -v
       - name: Actual OCR layout table and VLM probes
@@ -42,4 +44,4 @@ jobs:
             artifacts/probes/
             locks/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 90
